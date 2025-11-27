@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter.messagebox import askyesno
 
 from BankAccount import BankAccount
+from ai_client import ask_gpt
 
 
 class BankApp:
@@ -126,6 +127,16 @@ class BankApp:
         ]:
             btn.config(state=state)
 
+    # ---------- clearing entries ----------
+    def _clear_create_fields(self):
+        for entry in [
+            self.entry_name,
+            self.entry_iban,
+            self.entry_balance,
+            self.entry_overdraft_limit,
+        ]:
+            entry.delete(0, tk.END)
+
     # ---------- account creation ----------
     def create_account(self):
         name = self.entry_name.get().strip()
@@ -174,6 +185,8 @@ class BankApp:
             )
         )
         self._set_buttons_enabled(True)
+        self.refresh_account_list()
+
 
     # ---------- amount parsing ----------
     def _get_amount(self):
@@ -311,7 +324,7 @@ class BankApp:
             self._set_buttons_enabled(False)
             self.label_status.config(text="No account created yet. Balance: 0.00")
 
-    # ---------- fake AI assistant ----------
+    # ---------- fake AI assistant + GPT ----------
     def ask_assistant(self):
         if self.account is None:
             messagebox.showerror("Error", "Account not created")
@@ -322,10 +335,14 @@ class BankApp:
             messagebox.showerror("Error", "Question cannot be empty")
             return
 
+        # lower-case for command detection
         q = text.lower()
 
+        # --- basic command rules (work directly with the model) ---
+
         # balance
-        if "balance" in q or "баланс" in q:
+        if q == "balance" or q.startswith("balance ") \
+                or q == "баланс" or q.startswith("баланс "):
             msg = (
                 f"Current account {self.account.owner} "
                 f"({self.account.iban}) has a balance of "
@@ -384,26 +401,20 @@ class BankApp:
             self.reset_account()
             messagebox.showinfo("Assistant", "Account UI has been reset.")
 
-        # set overdraft X
+            # set overdraft X
         elif q.startswith("set overdraft"):
             parts = q.split()
             if len(parts) < 3:
-                messagebox.showerror(
-                    "Assistant", "Use: set overdraft <amount>"
-                )
+                messagebox.showerror("Assistant", "Use: set overdraft <amount>")
             else:
                 try:
                     amount = float(parts[2].replace(",", "."))
                 except ValueError:
-                    messagebox.showerror(
-                        "Assistant", "Overdraft must be a number"
-                    )
+                    messagebox.showerror("Assistant", "Overdraft must be a number")
                     return
 
                 if amount > 0:
-                    messagebox.showerror(
-                        "Assistant", "Overdraft must be <= 0"
-                    )
+                    messagebox.showerror("Assistant", "Overdraft must be <= 0")
                     return
 
                 self.account.overdraft_limit = amount
@@ -420,25 +431,33 @@ class BankApp:
                 )
 
         # show overdraft
-        elif "overdraft" in q or "овърдрафт" in q:
+        elif q == "overdraft" or q.startswith("overdraft ") \
+                or q == "овърдрафт" or q.startswith("овърдрафт "):
             msg = f"Current overdraft limit is {self.account.overdraft_limit:.2f}"
             messagebox.showinfo("Assistant", message=msg)
 
-        # fallback
+        # GPT fallback
         else:
-            messagebox.showinfo(
-                "Assistant",
-                "I understand commands like:\n"
-                "- 'balance'          -> show current balance\n"
-                "- 'deposit X'        -> deposit amount X\n"
-                "- 'withdraw X'       -> withdraw amount X\n"
-                "- 'overdraft'        -> show overdraft limit\n"
-                "- 'set overdraft X'  -> set overdraft limit\n"
-                "- 'history'          -> show account history\n"
-                "- 'owner'            -> show account owner\n"
-                "- 'iban'             -> show IBAN\n"
-                "- 'reset'            -> reset UI state\n",
+            prompt = (
+                "You are a banking assistant inside a small desktop demo app.\n"
+                "You can NOT actually move real money, but you can explain things.\n"
+                "Current account:\n"
+                f"- Owner: {self.account.owner}\n"
+                f"- IBAN: {self.account.iban}\n"
+                f"- Balance: {self.account.balance:.2f}\n"
+                f"- Overdraft limit: {self.account.overdraft_limit:.2f}\n\n"
+                f"User question: {text}\n\n"
+                "Answer briefly and clearly. If the user asks to deposit or withdraw, "
+                "explain what would happen, but do not say that you executed it yourself."
             )
+
+            answer = ask_gpt(prompt)
+
+            if answer.startswith("[OpenAI error]"):
+                messagebox.showerror("Assistant", answer)
+            else:
+                messagebox.showinfo("Assistant", answer)
+
 
 
 if __name__ == "__main__":

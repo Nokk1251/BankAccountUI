@@ -1,7 +1,6 @@
 1. Bank Account UI (Python + Tkinter)
 
-Small desktop app I wrote while learning Python and Tkinter.  
-It lets you create multiple bank accounts, work with balances and overdraft, and play with a simple “assistant” that understands text commands like `deposit 50` or `balance`.
+This is still a very basic project I did while playing around and learning Python and Tkinter. It lets you create multiple bank accounts, work with balances and overdraft, and play with a simple “assistant” that understands text commands like `deposit 50` or `balance` and now has an integrated AI assistant that requires an API key from OpenAI to work. 
 
 
 2. Features
@@ -20,14 +19,16 @@ It lets you create multiple bank accounts, work with balances and overdraft, and
   - understands commands like `deposit 100`, `withdraw 50`, `balance`
   - can show history, owner, IBAN and overdraft
   - can change the overdraft with `set overdraft -500`
+- Real AI assistant
 
 ---
 
 3. Tech stack
 
 - **Python 3**
-- **Tkinter** for the desktop UI
+- **Tkinter** for the UI
 - Plain Python classes for the account logic (`BankAccount` and `Transaction`)
+- OpenAI API for the AI assistant
 
 The logic and the interface are kept in separate files:
 
