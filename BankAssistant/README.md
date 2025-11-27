@@ -43,6 +43,19 @@ The logic and the interface are kept in separate files:
 -2. Download or clone this repository:
    - either use the **“Code → Download ZIP”** button,  
    - or run:
+-3 AI setup(optional)
+*The app can work without AI, but if you want to use it, you will need an OpenAI API key.
+
+ Steps:
+	I. Create an account at the OpenAI platform and generate your API key.
+	II. There is an example file I created called "config.example.py" which is where you will need to place your API key.
+	III. After placing your API key make a copy of the file and rename it to just "config.py"
+
+	It is also important to say that "config.py" is ignored by git on purpose, so your key stays private.
+
+Skipping these steps won't really affect the "bank" it will just work without the AI.
+
+	
 
 5.Notes
 
